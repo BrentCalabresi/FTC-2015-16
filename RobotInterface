@@ -1,0 +1,11 @@
+package com.qualcomm.ftcrobotcontroller.opmodes;
+
+
+
+/**
+ * Created by Brent on 1/2/2016.
+ */
+public interface RobotInterface {
+    public void didInit();
+    public void didStop();
+}
