@@ -2,25 +2,49 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Brent on 9/6/2015.
  * Windows 1252
  */
 public class Robot extends OpMode {
-;
 
 
+    GyroSensor gyro;
     DcMotor FR;
     DcMotor FL;
     DcMotor BR;
     DcMotor BL;
+    DcMotor l_arm;
+    DcMotor r_arm;
+    DcMotor sweeper;
 
-
-
+    HashMap<Long, ArrayList<RobotTimerCallback>> timers = new HashMap<Long,ArrayList<RobotTimerCallback>>();
+    long a;
     public Robot() {
+        this.a = System.nanoTime();
+    }
+
+    public void scheduleTimer(long time, RobotTimerCallback callback){
+        long current = System.nanoTime() - this.a;
+        long target = current+time;
+        ArrayList<RobotTimerCallback> callbacks = timers.get(target);
+
+        if(callbacks == null){
+            callbacks = new ArrayList<RobotTimerCallback>();
+            timers.put(target, callbacks);
+        }
+
+        callbacks.add(callback);
 
     }
 
@@ -37,8 +61,13 @@ public class Robot extends OpMode {
         BL = hardwareMap.dcMotor.get("BL");
         FR = hardwareMap.dcMotor.get("FR");
         FL = hardwareMap.dcMotor.get("FL");
+        l_arm = hardwareMap.dcMotor.get("l_arm");
+        r_arm = hardwareMap.dcMotor.get("r_arm");
+        gyro = hardwareMap.gyroSensor.get("gyro");
+        sweeper = hardwareMap.dcMotor.get("sweeper");
         BR.setDirection((DcMotor.Direction.REVERSE));
         FR.setDirection(DcMotor.Direction.REVERSE);
+        r_arm.setDirection(DcMotor.Direction.REVERSE);
 
         //arm = hardwareMap.servo.get("servo_1");
         //claw = hardwareMap.servo.get("servo_6");
@@ -51,8 +80,18 @@ public class Robot extends OpMode {
      */
     @Override
     public void loop() {
-
-
+        Set<Long> allTimers = timers.keySet();
+        long current = System.nanoTime() - this.a;
+        for (Long key : allTimers){
+            if(key<=current){
+                telemetry.addData("TIME-DEBUG","Timer fired at: "+current);
+                ArrayList<RobotTimerCallback> notifyList = timers.get(key);
+                for(RobotTimerCallback callback : notifyList){
+                    callback.fired(current);
+                }
+                timers.remove(key);
+            }
+        }
     }
 
     /*
