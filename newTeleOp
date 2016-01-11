@@ -11,6 +11,17 @@ public class TeleOp extends Robot {
     double FLval;
     double BRval;
     double BLval;
+    double rightarm;
+    double leftarm;
+    double sweep;
+
+    public double fixRange(double n){
+        if (n > 1)
+            n = 1;
+        if (n < -1)
+            n = -1;
+        return n;
+    }
 
     /*
     * This method will be called repeatedly in a loop
@@ -25,27 +36,51 @@ public class TeleOp extends Robot {
         // direction: left_stick_x ranges from -1 to 1, where -1 is full left
         // and 1 is full right
 
-        double y1 = -gamepad1.left_stick_y;
+        double y1 = gamepad1.left_stick_y;
         double x1 = gamepad1.left_stick_x;
-        double y2 = -gamepad1.right_stick_y;
+        double y2 = -gamepad2.left_stick_y;
         double x2 = gamepad1.right_stick_x;
 
-        scaleInput(y1);
-        scaleInput(x2);
-
-        if (Math.abs(x2) > .05) {
-            FLval = -x2;
-            BLval = -x2;
-            FRval = x2;
-            BRval = x2;
+        //scaleInput(y1);
+        //scaleInput(x2);
+        if ((gamepad2.right_bumper) || (gamepad1.right_bumper)) {
+            rightarm = 1;
+            leftarm = 1;
         }
-        else
+
+        else if ((gamepad1.right_trigger > .1) || gamepad2.right_trigger > .1) {
+            leftarm = -.15;
+            rightarm = -.15;
+        }
+        else{ leftarm = 0;
+              rightarm = 0;
+        }
+
+        //if (Math.abs(y2) > .05){
+         //   sweep = y2;
+        //}
+        if (gamepad2.left_bumper)
+            sweep = .05;
+        else if (gamepad2.left_trigger > .1)
+            sweep = -.05;
+        else sweep = 0;
+
+
         if (Math.abs(y1) > .05) {
 
             BRval = y1;
             BLval = y1;
             FRval = y1;
             FLval = y1;
+
+        }
+        else
+
+        if (Math.abs(x2) > .05) {
+            FLval = x2;
+            BLval = x2;
+            FRval = -x2;
+            BRval = -x2;
         }
 
         else {
@@ -65,33 +100,40 @@ public class TeleOp extends Robot {
         Range.clip(BRval, -1, 1);
         Range.clip(FRval, -1, 1);
 
+        FLval = fixRange(FLval);
+        FRval = fixRange(FRval);
+        BLval = fixRange(BLval);
+        BRval = fixRange(BRval);
+
         // write the values to the motors
-        FR.setPower(FRval);
-        FL.setPower(FLval);
-        BR.setPower(BRval);
-        BL.setPower(BLval);
+        //FR.setPower(scaleInput(FRval));
+        //FL.setPower(scaleInput(FLval));
+        //BR.setPower(scaleInput(BRval));
+        //BL.setPower(scaleInput(BLval));
+        FR.setPower((FRval));
+        FL.setPower((FLval));
+        BR.setPower((BRval));
+        BL.setPower((BLval));
+        l_arm.setPower(leftarm);
+        r_arm.setPower(rightarm);
+        sweeper.setPower(sweep);
 
-
+        //lower arm
         if (gamepad1.a) {
             FL.setPower(0);
         }
-
+        //raise arm
         if (gamepad1.y) {
         }
 
 
         telemetry.addData("Text", "*** Robot Data***");
 
-        telemetry.addData("left tgt pwr",  "left front pwr: " + String.format("%.2f", y1));
+        telemetry.addData("left tgt pwr", "left front pwr: " + String.format("%.2f", y1));
         telemetry.addData("right tgt pwr", "right front pwr: " + String.format("%.2f", x2));
 
     }
 
-    /*
-     * Code to run when the op mode is first disabled goes here
-     *
-     * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#stop()
-     */
     @Override
     public void stop() {
 
